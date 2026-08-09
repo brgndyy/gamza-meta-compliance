@@ -7,9 +7,9 @@ body{max-width:760px;margin:48px auto;padding:0 20px;font:16px/1.7 system-ui,san
 <p><strong>GamzaSalada DM Automation</strong>(이하 “서비스”)은 Instagram 계정 <strong>@gamza.salada</strong>의 댓글 요청에 자동으로 응답하기 위해 필요한 최소한의 정보만 처리합니다.</p>
 <p><small>시행일: 2026년 8월 9일</small></p>
 <h2>1. 처리하는 정보</h2>
-<ul><li>Instagram 댓글 ID, 게시물 ID</li><li>댓글 작성자의 Instagram 사용자 ID와 사용자명</li><li>Instagram 댓글 내용</li><li>전송 성공·실패 상태와 오류 기록</li></ul>
+<ul><li>Instagram 댓글 ID</li><li>Webhook 이벤트 시각</li><li>전송 성공·실패 상태와 제한된 오류 기록</li></ul>
 <h2>2. 처리 목적과 수집 경로</h2>
-<p>Meta가 제공하는 공식 Instagram API와 Webhook을 통해 정보를 수신하며, 요청 키워드 판별, 중복 발송 방지, 공개 답글·비공개 답장 전송, 장애 확인 목적으로만 사용합니다.</p>
+<p>Meta가 제공하는 공식 Instagram API와 Webhook을 통해 댓글 이벤트를 수신합니다. 그중 요청 키워드가 포함된 댓글만 저장하여 중복 발송 방지, 공개 답글·비공개 답장 전송, 장애 확인에 사용하며, 키워드가 없는 댓글은 저장하지 않습니다.</p>
 <h2>3. 보관 및 삭제</h2>
 <p>자동화 처리 기록은 수집일로부터 최대 90일간 보관한 뒤 삭제합니다. 삭제 요청이 확인되면 법령상 보관 의무가 없는 정보는 30일 이내 삭제합니다.</p>
 <h2>4. 제공 및 처리 위탁</h2>
@@ -22,6 +22,6 @@ body{max-width:760px;margin:48px auto;padding:0 20px;font:16px/1.7 system-ui,san
 <p>개인정보 문의: <a href="mailto:brgndyy@gmail.com">brgndyy@gmail.com</a></p>
 <hr>
 <h1>Privacy Policy</h1>
-<p>GamzaSalada DM Automation processes only the Instagram comment identifiers, media identifiers, sender identifiers/usernames, comment text, and delivery/error status required to respond to requests on @gamza.salada.</p>
-<p>Data is received through Meta's official Instagram API and Webhooks, is not sold, and is used only for keyword matching, duplicate prevention, reply delivery, and troubleshooting. Operational records are retained for no more than 90 days. Verified deletion requests are completed within 30 days unless retention is legally required.</p>
+<p>GamzaSalada DM Automation processes only the Instagram comment identifier, webhook event time, and limited delivery/error status required to respond to requests on @gamza.salada.</p>
+<p>Comment events are received through Meta's official Instagram API and Webhooks. Only comments containing configured request keywords are retained for duplicate prevention, public and private reply delivery, and troubleshooting; other comments are not stored. Data is not sold. Operational records are retained for no more than 90 days. Verified deletion requests are completed within 30 days unless retention is legally required.</p>
 <p>Infrastructure providers include Meta Platforms and Supabase. For access or deletion requests, see the <a href="data-deletion.html">Data Deletion Instructions</a> or contact <a href="mailto:brgndyy@gmail.com">brgndyy@gmail.com</a>.</p></body></html>
