@@ -60,7 +60,7 @@
   <script>
     const api='https://trgtaddxsyvtcnkypemh.supabase.co/functions/v1/instagram-webhook/review';
     const el=id=>document.getElementById(id);
-    let reelUrl='',watching=false;
+    let reelUrl='',watching=false,startedAt=0;
     async function loadEvidence(){
       try{
         const r=await fetch(api+'/evidence',{cache:'no-store'});if(!r.ok)throw new Error();
@@ -75,16 +75,16 @@
     async function refresh(){
       if(!watching)return;
       try{
-        const r=await fetch(api+'/status',{cache:'no-store'});if(!r.ok)throw new Error();
-        const {deliveries}=await r.json();if(!deliveries.length)return;
-        const d=deliveries[0],box=el('status');box.textContent='';
+        const r=await fetch(api+'/status?after='+encodeURIComponent(new Date(startedAt).toISOString()),{cache:'no-store'});if(!r.ok)throw new Error();
+        const {deliveries}=await r.json(),d=deliveries[0];if(!d)return;
+        const box=el('status');box.textContent='';
         const strong=document.createElement('strong');strong.textContent='Latest matching event';box.append(strong);
         box.append(document.createTextNode('Public reply: '+d.public_reply_status+' · Private Reply: '+d.private_reply_status+' · Conversation: '+d.conversation_status));
         box.append(document.createElement('br'));
         const time=document.createElement('span');time.className='meta';time.textContent='Event: '+new Date(d.event_created_at).toLocaleString();box.append(time);
       }catch{el('status').textContent='Status temporarily unavailable. Refresh this page and continue the Instagram test.'}
     }
-    el('start').addEventListener('click',()=>{watching=true;el('status').textContent='Waiting for the matching comment…';window.open(reelUrl,'_blank','noopener,noreferrer');refresh()});
+    el('start').addEventListener('click',()=>{watching=true;startedAt=Date.now()-10000;el('status').textContent='Waiting for the matching comment…';window.open(reelUrl,'_blank','noopener,noreferrer');refresh()});
     loadEvidence();setInterval(refresh,2000);
   </script>
 </body>
