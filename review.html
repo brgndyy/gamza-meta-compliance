@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>GamzaSalada Review Console</title>
+  <style>
+    :root{color-scheme:light;--ink:#171717;--muted:#6c6c6c;--line:#deded9;--ok:#137333;--bg:#f4f4f0}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,sans-serif}.shell{max-width:760px;margin:0 auto;padding:36px 20px 64px}header{margin-bottom:28px}h1{font-size:30px;line-height:1.15;margin:4px 0 8px}h2{font-size:17px;margin:0 0 14px}.eyebrow,.meta{color:var(--muted);font-size:13px}.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin:14px 0}.row{display:flex;justify-content:space-between;gap:18px;padding:10px 0;border-top:1px solid #eee}.row:first-of-type{border-top:0}.value{text-align:right;font-weight:650;overflow-wrap:anywhere}.ok{color:var(--ok)}.button{display:block;margin-top:18px;padding:13px 16px;border:0;border-radius:10px;background:#171717;color:#fff;text-align:center;text-decoration:none;font:700 15px system-ui;cursor:pointer}.button:disabled{background:#aaa;cursor:wait}.steps{margin:0;padding-left:20px}.steps li{margin:8px 0}.status{min-height:84px;padding:14px;border-radius:10px;background:#f7f7f7;font-size:14px}.status strong{display:block;margin-bottom:4px}.permission{font-size:14px;margin:8px 0}.permission code{font-size:12px}@media(max-width:520px){.shell{padding-top:24px}.row{display:block}.value{text-align:left;margin-top:3px}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div class="eyebrow">META APP REVIEW · LIVE EVIDENCE</div>
+      <h1>GamzaSalada Review Console</h1>
+      <p class="meta">This backend-only automation uses an operator-configured server-to-server Instagram access token. It has no separate consumer login screen.</p>
+    </header>
+
+    <section class="card">
+      <h2>Connected Instagram professional account</h2>
+      <div class="row"><span>API verification</span><span id="connection" class="value">Checking…</span></div>
+      <div class="row"><span>Instagram account</span><span id="account" class="value">—</span></div>
+      <div class="row"><span>Instagram account ID</span><span id="account-id" class="value">—</span></div>
+      <div class="row"><span>Authentication</span><span class="value">Server-to-server token</span></div>
+      <a id="profile" class="button" href="#" target="_blank" rel="noreferrer">Open connected profile</a>
+    </section>
+
+    <section class="card">
+      <h2>Active comment-to-DM campaign</h2>
+      <div class="row"><span>Media ID</span><span id="media-id" class="value">—</span></div>
+      <div class="row"><span>Media type</span><span id="media-type" class="value">—</span></div>
+      <div class="row"><span>Exact review keyword</span><span id="keyword" class="value">—</span></div>
+      <button id="start" class="button" disabled>Start live test</button>
+    </section>
+
+    <section class="card">
+      <h2>Permissions used in this flow</h2>
+      <p class="permission"><code>instagram_business_basic</code> — verifies the connected professional account and the interacting user's relationship to it.</p>
+      <p class="permission"><code>instagram_business_manage_comments</code> — receives the matching comment and posts one public reply.</p>
+      <p class="permission"><code>instagram_business_manage_messages</code> — sends the Private Reply, receives the user's consent reply and button postback, then sends the requested information.</p>
+    </section>
+
+    <section class="card">
+      <h2>Reviewer-visible flow</h2>
+      <ol class="steps">
+        <li>Press <b>Start live test</b> and post the exact keyword on the configured Reel.</li>
+        <li>The app receives the comment webhook and sends one public reply and one Instagram Private Reply.</li>
+        <li>Reply with the same keyword in Instagram Direct and press the follow-check button before following.</li>
+        <li>Open the business profile, follow it in Instagram, return to the DM, and check again.</li>
+        <li>The app verifies the relationship and sends the requested information once.</li>
+      </ol>
+    </section>
+
+    <section class="card">
+      <h2>Live delivery evidence</h2>
+      <div id="status" class="status"><strong>Ready</strong>Press Start live test, then return here to see the server delivery states.</div>
+    </section>
+  </main>
+
+  <script>
+    const api='https://trgtaddxsyvtcnkypemh.supabase.co/functions/v1/instagram-webhook/review';
+    const el=id=>document.getElementById(id);
+    let reelUrl='',watching=false;
+    async function loadEvidence(){
+      try{
+        const r=await fetch(api+'/evidence',{cache:'no-store'});if(!r.ok)throw new Error();
+        const {account,campaign}=await r.json();
+        el('connection').textContent='Connected via Instagram API';el('connection').classList.add('ok');
+        el('account').textContent='@'+account.username;el('account-id').textContent=account.id;
+        el('profile').href=account.profileUrl;el('media-id').textContent=campaign.mediaId;
+        el('media-type').textContent=campaign.mediaType;el('keyword').textContent=campaign.keyword;
+        reelUrl=campaign.permalink;el('start').disabled=false;
+      }catch{el('connection').textContent='Verification unavailable';el('status').textContent='The live Instagram API evidence could not be loaded.'}
+    }
+    async function refresh(){
+      if(!watching)return;
+      try{
+        const r=await fetch(api+'/status',{cache:'no-store'});if(!r.ok)throw new Error();
+        const {deliveries}=await r.json();if(!deliveries.length)return;
+        const d=deliveries[0],box=el('status');box.textContent='';
+        const strong=document.createElement('strong');strong.textContent='Latest matching event';box.append(strong);
+        box.append(document.createTextNode('Public reply: '+d.public_reply_status+' · Private Reply: '+d.private_reply_status+' · Conversation: '+d.conversation_status));
+        box.append(document.createElement('br'));
+        const time=document.createElement('span');time.className='meta';time.textContent='Event: '+new Date(d.event_created_at).toLocaleString();box.append(time);
+      }catch{el('status').textContent='Status temporarily unavailable. Refresh this page and continue the Instagram test.'}
+    }
+    el('start').addEventListener('click',()=>{watching=true;el('status').textContent='Waiting for the matching comment…';window.open(reelUrl,'_blank','noopener,noreferrer');refresh()});
+    loadEvidence();setInterval(refresh,2000);
+  </script>
+</body>
+</html>
