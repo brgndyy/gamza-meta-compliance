@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>GamzaSalada Review Console</title>
   <style>
-    :root{color-scheme:light;--ink:#171717;--muted:#6c6c6c;--line:#deded9;--ok:#137333;--bg:#f4f4f0}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,sans-serif}.shell{max-width:760px;margin:0 auto;padding:36px 20px 64px}header{margin-bottom:28px}h1{font-size:30px;line-height:1.15;margin:4px 0 8px}h2{font-size:17px;margin:0 0 14px}.eyebrow,.meta{color:var(--muted);font-size:13px}.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin:14px 0}.row{display:flex;justify-content:space-between;gap:18px;padding:10px 0;border-top:1px solid #eee}.row:first-of-type{border-top:0}.value{text-align:right;font-weight:650;overflow-wrap:anywhere}.ok{color:var(--ok)}.button{display:block;margin-top:18px;padding:13px 16px;border:0;border-radius:10px;background:#171717;color:#fff;text-align:center;text-decoration:none;font:700 15px system-ui;cursor:pointer}.button:disabled{background:#aaa;cursor:wait}.steps{margin:0;padding-left:20px}.steps li{margin:8px 0}.status{min-height:84px;padding:14px;border-radius:10px;background:#f7f7f7;font-size:14px}.status strong{display:block;margin-bottom:4px}.permission{font-size:14px;margin:8px 0}.permission code{font-size:12px}@media(max-width:520px){.shell{padding-top:24px}.row{display:block}.value{display:block;text-align:left;margin-top:3px}}
+    :root{color-scheme:light;--ink:#171717;--muted:#6c6c6c;--line:#deded9;--ok:#137333;--bg:#f4f4f0}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,sans-serif}.shell{max-width:760px;margin:0 auto;padding:36px 20px 64px}header{margin-bottom:28px}h1{font-size:30px;line-height:1.15;margin:4px 0 8px}h2{font-size:17px;margin:0 0 14px}.eyebrow,.meta{color:var(--muted);font-size:13px}.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin:14px 0}.row{display:flex;justify-content:space-between;gap:18px;padding:10px 0;border-top:1px solid #eee}.row:first-of-type{border-top:0}.value{text-align:right;font-weight:650;overflow-wrap:anywhere}.ok{color:var(--ok)}.input{display:block;width:100%;margin-top:8px;padding:12px;border:1px solid #aaa;border-radius:9px;font:16px system-ui}.button{display:block;width:100%;margin-top:18px;padding:13px 16px;border:0;border-radius:10px;background:#171717;color:#fff;text-align:center;text-decoration:none;font:700 15px system-ui;cursor:pointer}.button:disabled{background:#aaa;cursor:wait}.steps{margin:0;padding-left:20px}.steps li{margin:8px 0}.status{min-height:84px;padding:14px;border-radius:10px;background:#f7f7f7;font-size:14px}.status strong{display:block;margin-bottom:4px}.permission{font-size:14px;margin:8px 0}.permission code{font-size:12px}@media(max-width:520px){.shell{padding-top:24px}.row{display:block}.value{display:block;text-align:left;margin-top:3px}}
   </style>
 </head>
 <body>
@@ -15,6 +15,16 @@
       <h1>GamzaSalada Review Console</h1>
       <p class="meta">This backend-only automation uses an operator-configured server-to-server Instagram access token. It has no separate consumer login screen.</p>
     </header>
+
+    <section id="access" class="card">
+      <h2>Reviewer access</h2>
+      <label for="review-code">Review access code</label>
+      <input id="review-code" class="input" type="password" autocomplete="off">
+      <button id="unlock" class="button">Open review console</button>
+      <p id="access-error" class="meta" role="alert"></p>
+    </section>
+
+    <div id="console" hidden>
 
     <section class="card">
       <h2>Connected Instagram professional account</h2>
@@ -55,27 +65,28 @@
       <h2>Live delivery evidence</h2>
       <div id="status" class="status"><strong>Ready</strong>Press Start live test, then return here to see the server delivery states.</div>
     </section>
+    </div>
   </main>
 
   <script>
     const api='https://trgtaddxsyvtcnkypemh.supabase.co/functions/v1/instagram-webhook/review';
     const el=id=>document.getElementById(id);
-    let reelUrl='',watching=false,startedAt=0;
+    let reelUrl='',watching=false,startedAt=0,reviewToken='';
     async function loadEvidence(){
       try{
-        const r=await fetch(api+'/evidence',{cache:'no-store'});if(!r.ok)throw new Error();
+        const r=await fetch(api+'/evidence',{cache:'no-store',headers:{authorization:'Bearer '+reviewToken}});if(!r.ok)throw new Error();
         const {account,campaign}=await r.json();
         el('connection').textContent='Connected via Instagram API';el('connection').classList.add('ok');
         el('account').textContent='@'+account.username;el('account-id').textContent=account.id;
         el('profile').href=account.profileUrl;el('media-id').textContent=campaign.mediaId;
         el('media-type').textContent=campaign.mediaType;el('keyword').textContent=campaign.keyword;
-        reelUrl=campaign.permalink;el('start').disabled=false;
-      }catch{el('connection').textContent='Verification unavailable';el('status').textContent='The live Instagram API evidence could not be loaded.'}
+        reelUrl=campaign.permalink;el('start').disabled=false;return true;
+      }catch{return false}
     }
     async function refresh(){
       if(!watching)return;
       try{
-        const r=await fetch(api+'/status?after='+encodeURIComponent(new Date(startedAt).toISOString()),{cache:'no-store'});if(!r.ok)throw new Error();
+        const r=await fetch(api+'/status?after='+encodeURIComponent(new Date(startedAt).toISOString()),{cache:'no-store',headers:{authorization:'Bearer '+reviewToken}});if(!r.ok)throw new Error();
         const {deliveries}=await r.json(),d=deliveries[0];if(!d)return;
         const box=el('status');box.textContent='';
         const strong=document.createElement('strong');strong.textContent='Latest matching event';box.append(strong);
@@ -84,8 +95,9 @@
         const time=document.createElement('span');time.className='meta';time.textContent='Event: '+new Date(d.event_created_at).toLocaleString();box.append(time);
       }catch{el('status').textContent='Status temporarily unavailable. Refresh this page and continue the Instagram test.'}
     }
+    el('unlock').addEventListener('click',async()=>{reviewToken=el('review-code').value.trim();el('access-error').textContent='';if(!reviewToken){el('access-error').textContent='Enter the review access code.';return}el('unlock').disabled=true;const ok=await loadEvidence();el('unlock').disabled=false;if(!ok){el('access-error').textContent='The review access code is invalid.';return}el('access').hidden=true;el('console').hidden=false});
     el('start').addEventListener('click',()=>{watching=true;startedAt=Date.now()-10000;el('status').textContent='Waiting for the matching comment…';window.open(reelUrl,'_blank','noopener,noreferrer');refresh()});
-    loadEvidence();setInterval(refresh,2000);
+    setInterval(refresh,2000);
   </script>
 </body>
 </html>
