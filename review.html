@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>GamzaSalada Review Console</title>
   <style>
-    :root{color-scheme:light;--ink:#171717;--muted:#6c6c6c;--line:#deded9;--ok:#137333;--bg:#f4f4f0}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,sans-serif}.shell{max-width:760px;margin:0 auto;padding:36px 20px 64px}header{margin-bottom:28px}h1{font-size:30px;line-height:1.15;margin:4px 0 8px}h2{font-size:17px;margin:0 0 14px}.eyebrow,.meta{color:var(--muted);font-size:13px}.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin:14px 0}.row{display:flex;justify-content:space-between;gap:18px;padding:10px 0;border-top:1px solid #eee}.row:first-of-type{border-top:0}.value{text-align:right;font-weight:650;overflow-wrap:anywhere}.ok{color:var(--ok)}.input{display:block;width:100%;margin-top:8px;padding:12px;border:1px solid #aaa;border-radius:9px;font:16px system-ui}.button{display:block;width:100%;margin-top:18px;padding:13px 16px;border:0;border-radius:10px;background:#171717;color:#fff;text-align:center;text-decoration:none;font:700 15px system-ui;cursor:pointer}.button:disabled{background:#aaa;cursor:wait}.steps{margin:0;padding-left:20px}.steps li{margin:8px 0}.status{min-height:84px;padding:14px;border-radius:10px;background:#f7f7f7;font-size:14px}.status strong{display:block;margin-bottom:4px}.permission{font-size:14px;margin:8px 0}.permission code{font-size:12px}@media(max-width:520px){.shell{padding-top:24px}.row{display:block}.value{display:block;text-align:left;margin-top:3px}}
+    :root{color-scheme:light;--ink:#171717;--muted:#6c6c6c;--line:#deded9;--ok:#137333;--bg:#f4f4f0}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,sans-serif}.shell{max-width:760px;margin:0 auto;padding:36px 20px 64px}header{margin-bottom:28px}h1{font-size:30px;line-height:1.15;margin:4px 0 8px}h2{font-size:17px;margin:0 0 14px}.eyebrow,.meta{color:var(--muted);font-size:13px}.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin:14px 0}.row{display:flex;justify-content:space-between;gap:18px;padding:10px 0;border-top:1px solid #eee}.row:first-of-type{border-top:0}.value{text-align:right;font-weight:650;overflow-wrap:anywhere}.ok{color:var(--ok)}.input{display:block;width:100%;margin-top:8px;padding:12px;border:1px solid #aaa;border-radius:9px;font:16px system-ui}.button{display:block;width:100%;margin-top:18px;padding:13px 16px;border:0;border-radius:10px;background:#171717;color:#fff;text-align:center;text-decoration:none;font:700 15px system-ui;cursor:pointer}.button:disabled{background:#aaa;cursor:wait}.steps{margin:0;padding-left:20px}.steps li{margin:8px 0}.status{min-height:84px;padding:14px;border-radius:10px;background:#f7f7f7;font-size:14px}.status strong{display:block;margin-bottom:4px}.permission{font-size:14px;margin:8px 0}.permission code{font-size:12px;overflow-wrap:anywhere;word-break:break-word}@media(max-width:520px){.shell{padding-top:24px}.row{display:block}.value{display:block;text-align:left;margin-top:3px}}
   </style>
 </head>
 <body>
@@ -13,7 +13,7 @@
     <header>
       <div class="eyebrow">META APP REVIEW · LIVE EVIDENCE</div>
       <h1>GamzaSalada Review Console</h1>
-      <p class="meta">This backend-only automation uses an operator-configured server-to-server Instagram access token. It has no separate consumer login screen.</p>
+      <p class="meta">This backend-only automation uses an operator-configured server-to-server Instagram access token. There is no front-end Meta login or permission-grant flow for reviewers.</p>
     </header>
 
     <section id="access" class="card">
@@ -51,13 +51,22 @@
     </section>
 
     <section class="card">
+      <h2>Live app-to-Instagram send</h2>
+      <p class="meta">After the tester follows the connected account, this control verifies the relationship and sends the exact message shown below through the Instagram API.</p>
+      <div class="status"><strong>Exact outgoing message</strong><span id="outgoing-message">—</span></div>
+      <button id="send" class="button" disabled>Verify follow and send this message</button>
+      <p id="send-state" class="meta" role="status">Start a live test and complete the consent step first.</p>
+    </section>
+
+    <section class="card">
       <h2>Reviewer-visible flow</h2>
       <ol class="steps">
         <li>Press <b>Start live test</b> and post the exact keyword on the configured Reel.</li>
         <li>The app receives the comment webhook and sends one public reply and one Instagram Private Reply.</li>
         <li>Reply with the same keyword in Instagram Direct and press the follow-check button before following.</li>
-        <li>Open the business profile, follow it in Instagram, return to the DM, and check again.</li>
-        <li>The app verifies the relationship and sends the requested information once.</li>
+        <li>Open the business profile and follow it in Instagram.</li>
+        <li>Return to this console and press <b>Verify follow and send this message</b>.</li>
+        <li>Return to Instagram Direct and verify that the identical displayed message arrived.</li>
       </ol>
     </section>
 
@@ -80,6 +89,7 @@
         el('account').textContent='@'+account.username;el('account-id').textContent=account.id;
         el('profile').href=account.profileUrl;el('media-id').textContent=campaign.mediaId;
         el('media-type').textContent=campaign.mediaType;el('keyword').textContent=campaign.keyword;
+        el('outgoing-message').textContent=campaign.resourceMessage;
         reelUrl=campaign.permalink;el('start').disabled=false;return true;
       }catch{return false}
     }
@@ -93,10 +103,14 @@
         box.append(document.createTextNode('Public reply: '+d.public_reply_status+' · Private Reply: '+d.private_reply_status+' · Conversation: '+d.conversation_status));
         box.append(document.createElement('br'));
         const time=document.createElement('span');time.className='meta';time.textContent='Event: '+new Date(d.event_created_at).toLocaleString();box.append(time);
+        if(d.public_reply_status==='sent'&&d.private_reply_status==='sent'&&d.conversation_status==='awaiting_follow'){
+          el('send').disabled=false;el('send-state').textContent='Ready: follow the connected account, then press the send button.';
+        }
       }catch{el('status').textContent='Status temporarily unavailable. Refresh this page and continue the Instagram test.'}
     }
     el('unlock').addEventListener('click',async()=>{reviewToken=el('review-code').value.trim();el('access-error').textContent='';if(!reviewToken){el('access-error').textContent='Enter the review access code.';return}el('unlock').disabled=true;const ok=await loadEvidence();el('unlock').disabled=false;if(!ok){el('access-error').textContent='The review access code is invalid.';return}el('access').hidden=true;el('console').hidden=false});
-    el('start').addEventListener('click',()=>{watching=true;startedAt=Date.now()-10000;el('status').textContent='Waiting for the matching comment…';window.open(reelUrl,'_blank','noopener,noreferrer');refresh()});
+    el('start').addEventListener('click',()=>{watching=true;startedAt=Date.now()-10000;el('send').disabled=true;el('send-state').textContent='Waiting for Instagram consent…';el('send-state').classList.remove('ok');el('status').textContent='Waiting for the matching comment…';window.open(reelUrl,'_blank','noopener,noreferrer');refresh()});
+    el('send').addEventListener('click',async()=>{el('send').disabled=true;el('send-state').textContent='Verifying follow and sending the displayed message…';try{const r=await fetch(api+'/send',{method:'POST',headers:{authorization:'Bearer '+reviewToken,'content-type':'application/json'},body:JSON.stringify({after:new Date(startedAt).toISOString()})});if(!r.ok)throw new Error(await r.text());const result=await r.json();if(result.message!==el('outgoing-message').textContent)throw new Error('Message verification failed');el('send-state').textContent='Sent from this review console through the Instagram API. Open Instagram Direct to verify the identical message.';el('send-state').classList.add('ok');refresh()}catch(error){el('send').disabled=false;el('send-state').textContent=error.message||'Unable to send the review message.'}});
     setInterval(refresh,2000);
   </script>
 </body>
